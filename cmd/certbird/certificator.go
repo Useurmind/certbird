@@ -90,8 +90,6 @@ func createCertificate(config *CertConfig) ([]byte, []byte, error)  {
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(caPrivKey),
 	})
-
-
 	
 	return caPEM.Bytes(), caPrivKeyPEM.Bytes(), nil
 }
