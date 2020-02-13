@@ -1,6 +1,8 @@
-package main
+package caserver
 
 import (
+	"fmt"
+	"net"
 	"bytes"
 	"os"
 	"crypto/rand"
@@ -12,6 +14,7 @@ import (
 	"io/ioutil"
 	"encoding/pem"
 	"path/filepath"
+	. "github.com/ahmetb/go-linq"
 )
 
 // CertConfig configures how a certificate should be created
@@ -23,8 +26,10 @@ type CertConfig struct {
 	StreetAddress string
 	PostalCode string
 
+	DNSNames []string
+	IPAddresses []string
+	EmailAddresses []string
 	
-	FilePath string
 	IsCA bool
 	ValidYears int32
 	ValidMonths int32
@@ -33,16 +38,16 @@ type CertConfig struct {
 }
 
 
-func ensureCertificate(config *CertConfig) error {
-	if _, err := os.Stat(config.FilePath); os.IsNotExist(err) {
-		cert, privKey, err := createCertificate(config)
+func ensureCertificate(config *CertConfig, certFilePath string) error {
+	if _, err := os.Stat(certFilePath); os.IsNotExist(err) {
+		cert, privKey, err := createCertificate(config, nil)
 		if err != nil {
 			return err
 		}
 
-		ioutil.WriteFile(config.FilePath, cert, 0777)
-		certExt := filepath.Ext(config.FilePath)
-		privKeyPath := config.FilePath[0:len(config.FilePath) - len(certExt)] + ".key"
+		ioutil.WriteFile(certFilePath, cert, 0777)
+		certExt := filepath.Ext(certFilePath)
+		privKeyPath := certFilePath[0:len(certFilePath) - len(certExt)] + ".key"
 		ioutil.WriteFile(privKeyPath, privKey, 0777)
 	}
 
@@ -50,7 +55,14 @@ func ensureCertificate(config *CertConfig) error {
 }
 
 // returns the pem encoded cert and private key bytes
-func createCertificate(config *CertConfig) ([]byte, []byte, error)  {
+func createCertificate(config *CertConfig, privKey *rsa.PrivateKey) ([]byte, []byte, error)  {
+	ipAddresses := convertIPsFromStringToIP(config.IPAddresses)
+
+	durationHours, err := time.ParseDuration(fmt.Sprintf("%dh", config.ValidHours))
+	if err != nil {
+		return nil, nil, err
+	}
+
 	ca := &x509.Certificate{
 		SerialNumber: big.NewInt(2019),
 		Subject: pkix.Name{
@@ -62,16 +74,24 @@ func createCertificate(config *CertConfig) ([]byte, []byte, error)  {
 			PostalCode:    []string{config.PostalCode},
 		},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(int(config.ValidYears), int(config.ValidMonths), int(config.ValidDays)),
+		NotAfter:              time.Now().AddDate(int(config.ValidYears), int(config.ValidMonths), int(config.ValidDays)).Add(durationHours),
 		IsCA:                  config.IsCA,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
+		DNSNames: config.DNSNames,
+		IPAddresses: ipAddresses,
+		EmailAddresses: config.EmailAddresses,
 	}
 
-	caPrivKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return nil, nil, err
+	caPrivKey := privKey
+
+	if caPrivKey == nil {
+		var err error
+		caPrivKey, err = rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &caPrivKey.PublicKey, caPrivKey)
@@ -92,4 +112,16 @@ func createCertificate(config *CertConfig) ([]byte, []byte, error)  {
 	})
 	
 	return caPEM.Bytes(), caPrivKeyPEM.Bytes(), nil
+}
+
+func signCSR(csrPEM []byte, caPEM []byte, caPrivKeyPEM[])
+{
+	
+}
+
+func convertIPsFromStringToIP(ipAddressStrings []string) ([]net.IP) {
+	var ipAddresses []net.IP
+	From(ipAddressStrings).Select(func(ipString interface{}) interface{} { return net.ParseIP(ipString.(string)) }).ToSlice(&ipAddresses)
+
+	return ipAddresses
 }
