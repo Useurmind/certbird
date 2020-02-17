@@ -2,22 +2,21 @@ package main
 
 import (
 	"fmt"
+	"time"
 	"net/http"
-	"io/ioutil"
 	"github.com/useurmind/certbird/caserver"
 )
 
 func main() {
-	var caFilePath string = "ca.pem"
-
-	caCertConfig := CertConfig{
-		ValidYears: 10,
+	validDuration, _ :=time.ParseDuration("10y")
+	caCertConfig := caserver.CertConfig{
+		ValidDuration: validDuration,
 		IsCA: true,
 	}
 
 	serverConfig := caserver.DefaultServerConfig()
 
-	EnsureCACertificate(&caCertConfig, serverConfig)
+	caserver.EnsureCACertificate(&caCertConfig, serverConfig)
 
 	runCertbirdEndpoint(serverConfig)
 }
