@@ -6,6 +6,8 @@ import (
 	"crypto/x509"
 	"crypto/rsa"
 	"encoding/pem"
+
+	"github.com/useurmind/certbird/utils"
 )
 
 // CertificatePackage holds all information a ca client/web server needs about its certificate.
@@ -35,8 +37,13 @@ func CreateCertRequest(csrInfo CertRequestInfo) (*CertificatePackage, error) {
 		return nil, err
 	}
 
+	ipAddresses, err := utils.ConvertIPsFromStringToIP(csrInfo.IPAddresses)
+	if err != nil {
+		return nil, err
+	}
+
 	certReqInfo := x509.CertificateRequest{
-		IPAddresses: convertIPsFromStringToIP(csrInfo.IPAddresses),
+		IPAddresses: ipAddresses,
 		DNSNames: csrInfo.DNSNames,
 		EmailAddresses: csrInfo.EmailAddresses,
 		PublicKey: privKey.PublicKey,
@@ -49,7 +56,7 @@ func CreateCertRequest(csrInfo CertRequestInfo) (*CertificatePackage, error) {
 
 	csrPEM := new(bytes.Buffer)
 	pem.Encode(csrPEM, &pem.Block{
-		Type:  "CERTIFICATE REQUEST",
+		Type:  utils.PEM_TYPE_CERTIFICATE_REQUEST,
 		Bytes: csr,
 	})
 
