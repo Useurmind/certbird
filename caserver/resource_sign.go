@@ -2,43 +2,29 @@ package caserver
 
 import (
 	"fmt"
-	"log"
-	"net/http"
 	"io/ioutil"
-	"time"
+	"net/http"
 )
 
-func PostSignCSR(serverConfig ServerConfig, w http.ResponseWriter, req *http.Request) {
+func PostSignCSR(service *Service, w http.ResponseWriter, req *http.Request) {
 	csrPEM, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Println("Could not read body for csr signing request:", err)
+		fmt.Fprintln(w, "Could not read csr from body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var validDurationString string
+	validDuration := ""
 	validDurationStrings, ok := req.URL.Query()["validDuration"]
-	if !ok || len(validDurationStrings[0]) < 1 {
-		validDurationString = "30m"
-	} else {
-		validDurationString = validDurationStrings[0]
+	if ok && len(validDurationStrings[0]) > 0 {
+		validDuration = validDurationStrings[0]
 	}
-
-	validDuration, err := time.ParseDuration(validDurationString)
-	if err != nil {
-		log.Println("Could not parse valid duration from csr signing request:", err)
-		fmt.Fprintln(w, "Invalid duration string:", validDurationString)
-		w.WriteHeader(http.StatusBadRequest)
+	
+	signedCertPEM, e := service.SignCSR(string(csrPEM), validDuration)
+	if e != nil {
+		e.WriteTo(w)
 		return
 	}
 
-	signedCertPEM, err := signCSR(csrPEM, validDuration, serverConfig.CACertFilePath, serverConfig.CAKeyFilePath)
-	if err != nil {
-		log.Println("Could not sign certificate request:", err)
-		fmt.Fprintln(w, "Invalid certificate request")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	w.Write(signedCertPEM)
+	w.Write([]byte(signedCertPEM))
 }

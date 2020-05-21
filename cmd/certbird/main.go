@@ -15,15 +15,16 @@ func main() {
 	}
 
 	serverConfig := caserver.DefaultServerConfig()
+	service := caserver.NewService(&serverConfig)
 
 	caserver.EnsureCACertificate(&caCertConfig, serverConfig)
 
-	runCertbirdEndpoint(serverConfig)
+	runCertbirdEndpoint(service)
 }
 
-func runCertbirdEndpoint(serverConfig caserver.ServerConfig) {
-	http.HandleFunc("/ca", func(w http.ResponseWriter, req *http.Request) { caserver.GetCACertificate(serverConfig, w, req) })
-	http.HandleFunc("/sign", func(w http.ResponseWriter, req *http.Request) { caserver.PostSignCSR(serverConfig, w, req) })
+func runCertbirdEndpoint(service *caserver.Service) {
+	http.HandleFunc("/ca", func(w http.ResponseWriter, req *http.Request) { caserver.GetCACertificate(service, w, req) })
+	http.HandleFunc("/sign", func(w http.ResponseWriter, req *http.Request) { caserver.PostSignCSR(service, w, req) })
 
 	listenOn := ":8091"
 	fmt.Println("Listening on", listenOn)
