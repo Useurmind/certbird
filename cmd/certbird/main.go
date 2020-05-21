@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	validDuration, _ :=time.ParseDuration("10y")
+	validDuration, _ := time.ParseDuration("10y")
 	caCertConfig := caserver.CertConfig{
 		ValidDuration: validDuration,
 		IsCA: true,
