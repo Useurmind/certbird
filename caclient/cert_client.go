@@ -23,11 +23,6 @@ type CertRequestInfo struct {
 	DNSNames []string
 	IPAddresses []string
 	EmailAddresses []string
-	
-	ValidYears int32
-	ValidMonths int32
-	ValidDays int32
-	ValidHours int32
 }
 
 // Returns the csr, cert, and priv key (PEM encoded) and potential error.

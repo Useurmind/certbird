@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/useurmind/certbird/caclient"
 )
 
 func TestGetCACertReturnsCACert(t *testing.T) {
@@ -32,4 +33,26 @@ func TestGetCACertReturns404IfCACertMissing(t *testing.T) {
 	_, err := service.GetCACertificate()
 	assert.NotNil(t, err)
 	assert.Equal(t, 404, err.HTTPStatusCode)
+}
+
+func TestSignCSRReturnsValidCert(t *testing.T) {
+	ctx := NewTestContext(t)
+	serverConfig := ctx.PrepareTest()
+	defer ctx.CleanupTest()
+
+	dnsName := "myfancy.host.com"
+	csrInfo := caclient.CertRequestInfo{
+		DNSNames: []string { dnsName },
+	}
+
+	csrPkg, err := caclient.CreateCertRequest(csrInfo)
+	assert.Nil(t, err)
+
+	service := NewService(serverConfig)
+
+	certPEM, herr := service.SignCSR(string(csrPkg.CsrPEM), "1h")
+	assert.Nil(t, herr)
+
+	err = ctx.ValidateCertificatePEM(certPEM, dnsName)
+	assert.Nil(t, err)
 }

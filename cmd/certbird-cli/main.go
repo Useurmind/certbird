@@ -20,7 +20,6 @@ func main() {
 
 	csrInfo := caclient.CertRequestInfo{
 		DNSNames: []string {"localhost"},
-		ValidHours: 1,
 	}
 
 	certPackage, err := caclient.CreateCertRequest(csrInfo)
