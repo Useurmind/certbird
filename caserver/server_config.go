@@ -1,5 +1,9 @@
 package caserver
 
+import (
+	"fmt"
+)
+
 // ServerConfig defines the configuration properties for the ca server.
 type ServerConfig struct {
 	// The path to the PEM encoded CA certificate file.
@@ -13,6 +17,14 @@ type ServerConfig struct {
 func DefaultServerConfig() ServerConfig {
 	return ServerConfig{
 		CACertFilePath: "ca.pem",
-		CAKeyFilePath: "ca.key",
+		CAKeyFilePath:  "ca.key",
+	}
+}
+
+// TestServerConfig returns the server configuration for testing purposes.
+func TestServerConfig(basePath string) ServerConfig {
+	return ServerConfig{
+		CACertFilePath: fmt.Sprintf("%s/ca.pem", basePath),
+		CAKeyFilePath:  fmt.Sprintf("%s/ca.key", basePath),
 	}
 }

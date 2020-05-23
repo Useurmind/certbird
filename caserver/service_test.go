@@ -1,28 +1,35 @@
 package caserver
 
 import (
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetCACertReturnsCACert(t *testing.T) {
-	// certFilePath := "./ca_test_cert.pem"
-	// keyFilePath := "./ca_test_cert.key"
-	// defer os.Remove(certFilePath)
-	// defer os.Remove(keyFilePath)
+	ctx := NewTestContext(t)
+	serverConfig := ctx.PrepareTest()
+	defer ctx.CleanupTest()
 
-	// serverConfig := ServerConfig {
-	// 	CACertFilePath: certFilePath,
-	// 	CAKeyFilePath: keyFilePath,
-	// }
+	service := NewService(serverConfig)
 
-	// certConfig := &CertConfig{
-	// 	IsCA: true,
-	// }
-	// certConfig.ParseIPAddresses([]string { "121.12.34.12", "233.23.54.87" })
+	caCertPEM, err := service.GetCACertificate()
+	assert.Nil(t, err)
 
-	// err := EnsureCACertificate(certConfig, serverConfig)
-	// assert.Nil(t, err)
+	assert.NotEqual(t, "", caCertPEM)
+}
 
-	// assert.Equal(t, true, utils.DoesFileExist(certFilePath))
-	// assert.Equal(t, true, utils.DoesFileExist(keyFilePath))
+func TestGetCACertReturns404IfCACertMissing(t *testing.T) {
+	ctx := NewTestContext(t)
+	serverConfig := ctx.PrepareTest()
+	defer ctx.CleanupTest()
+
+	os.Remove(serverConfig.CACertFilePath)
+
+	service := NewService(serverConfig)
+
+	_, err := service.GetCACertificate()
+	assert.NotNil(t, err)
+	assert.Equal(t, 404, err.HTTPStatusCode)
 }
