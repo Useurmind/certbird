@@ -5,14 +5,16 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
+	"os"
+	"path"
 	"time"
-	"encoding/json"
 
 	"github.com/useurmind/certbird/utils"
 )
@@ -57,6 +59,9 @@ func EnsureCACertificate(config *CertConfig, serverConfig ServerConfig) error {
 
 	if !utils.DoesFileExist(serverConfig.CACertFilePath) {
 		log.Println("Creating missing CA certificate file", serverConfig.CACertFilePath)
+		dir := path.Dir(serverConfig.CACertFilePath)
+		os.MkdirAll(dir, 666)
+
 		cert, err := createCertificate(config, spk.privKey, &spk.privKey.PublicKey, nil)
 		if err != nil {
 			return err

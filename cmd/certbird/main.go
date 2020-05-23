@@ -1,35 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	"net/http"
+	"log"
+	"os"
+
 	"github.com/useurmind/certbird/caserver"
 )
 
 func main() {
-	validDuration, _ := time.ParseDuration("10y")
-	caCertConfig := caserver.CertConfig{
-		ValidDuration: validDuration,
-		IsCA: true,
+	server := caserver.CAServer{
+		ServerConfig: caserver.DefaultServerConfig(),
 	}
 
-	serverConfig := caserver.DefaultServerConfig()
-	service := caserver.NewService(&serverConfig)
+	err := server.Run()	
+	if err != nil {
+		log.Printf("ERROR while running caserver: %v", err)
+		os.Exit(1)
+	}
 
-	caserver.EnsureCACertificate(&caCertConfig, serverConfig)
-
-	runCertbirdEndpoint(service)
+	os.Exit(0)
 }
-
-func runCertbirdEndpoint(service *caserver.Service) {
-	http.HandleFunc("/ca", func(w http.ResponseWriter, req *http.Request) { caserver.GetCACertificate(service, w, req) })
-	http.HandleFunc("/sign", func(w http.ResponseWriter, req *http.Request) { caserver.PostSignCSR(service, w, req) })
-
-	listenOn := ":8091"
-	fmt.Println("Listening on", listenOn)
-	http.ListenAndServe(listenOn, nil)
-}
-
-
-

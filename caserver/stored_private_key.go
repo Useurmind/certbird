@@ -1,14 +1,17 @@
 package caserver
 
 import (
-	"fmt"
-	"log"
 	"bytes"
 	"crypto/rand"
-	"crypto/x509"
 	"crypto/rsa"
-	"io/ioutil"
+	"crypto/x509"
 	"encoding/pem"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+
 	"github.com/useurmind/certbird/utils"
 )
 
@@ -43,6 +46,9 @@ func (spk *StoredPrivateKey) ensure() error {
 
 func (spk *StoredPrivateKey) loadFromPEM() error {
 	filePath := spk.filePath
+	
+	dir := path.Dir(filePath)
+	os.MkdirAll(dir, 666)
 
 	log.Println("Trying to load private key from PEM file", filePath)
 	if !utils.DoesFileExist(filePath) {

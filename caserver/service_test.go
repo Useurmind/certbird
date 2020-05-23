@@ -10,7 +10,7 @@ import (
 
 func TestGetCACertReturnsCACert(t *testing.T) {
 	ctx := NewTestContext(t)
-	serverConfig := ctx.PrepareTest()
+	serverConfig := ctx.EnsureCertificate()
 	defer ctx.CleanupTest()
 
 	service := NewService(serverConfig)
@@ -23,7 +23,7 @@ func TestGetCACertReturnsCACert(t *testing.T) {
 
 func TestGetCACertReturns404IfCACertMissing(t *testing.T) {
 	ctx := NewTestContext(t)
-	serverConfig := ctx.PrepareTest()
+	serverConfig := ctx.EnsureCertificate()
 	defer ctx.CleanupTest()
 
 	os.Remove(serverConfig.CACertFilePath)
@@ -37,12 +37,12 @@ func TestGetCACertReturns404IfCACertMissing(t *testing.T) {
 
 func TestSignCSRReturnsValidCert(t *testing.T) {
 	ctx := NewTestContext(t)
-	serverConfig := ctx.PrepareTest()
+	serverConfig := ctx.EnsureCertificate()
 	defer ctx.CleanupTest()
 
 	dnsName := "myfancy.host.com"
 	csrInfo := caclient.CertRequestInfo{
-		DNSNames: []string { dnsName },
+		DNSNames: []string{dnsName},
 	}
 
 	csrPkg, err := caclient.CreateCertRequest(csrInfo)
