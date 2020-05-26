@@ -1,0 +1,52 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: certrequests.certbird.useurmind.github.com
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: certbird.useurmind.github.com
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+
+  # either Namespaced or Cluster
+  scope: Namespaced
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: certrequests
+    # singular name to be used as an alias on the CLI and for display
+    singular: certrequest
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: CertRequest
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+      - cb-cr
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            secretName:
+              description: "The name of the secret to create, optional, default: name of the cert request"
+              type: string
+            secretCertKey:
+              description: "The key of the pem encoded certificate data in the created secret, default: crt"
+              type: string
+            secretPrivKeyKey:
+              description: "The key of the pem encoded private key data in the created secret, default: key"
+              type: string
+            dnsNames:
+              description: "The DNS names for which the generated certificate should be valid via server auth."
+              type: array
+              items:
+                type: string
+            validDuration:
+              description: "The validity duration of a certificate (parseable by go time.ParseDuration), default: 30m"
+              type: string
