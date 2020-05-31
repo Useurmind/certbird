@@ -1,3 +1,5 @@
 *.exe
 *.key
 *.pem
+
+k8s-controller/vendor
